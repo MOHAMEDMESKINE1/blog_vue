@@ -8,7 +8,7 @@ use Inertia\Inertia;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\Post\PostRequest;
+use App\Http\Requests\PostRequest ;
 use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
@@ -35,10 +35,10 @@ class PostController extends Controller
             'commentsByDay' => $commentsByDay,
         ]);
     }
-    public function index( Request $request)
+    public function index()
     {
         // Check if a search query is present
-        $searchQuery =$request->search;
+        // $searchQuery =$request->search;
     
         /* If there's a search query, filter posts by title; otherwise, get all posts
             // $postsQuery =!empty( $searchQuery)
@@ -55,14 +55,16 @@ class PostController extends Controller
             //     : Post::with('user');
         */
         
-        if($request->filled('search')){
+        // if($request->filled('search')){
 
-          $posts = Post::search(trim($request->search))->paginate(3);
-          $posts->load('user');
+        //   $posts = Post::search(trim($request->search))->paginate(3);
+        //   $posts->load('user');
 
-        }else{
-            $posts = Post::with('user')->paginate(3);
-        }
+        // }else{
+        //     $posts = Post::with('user')->paginate(3);
+        // }
+        
+        $posts = Post::with('user')->paginate(3);
 
        return Inertia::render('Posts/Index',compact('posts'));
     }
