@@ -142,6 +142,10 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
+        $request->validate([
+            'title'=> 'required',
+            'description'=> 'required',
+        ]);
         if($request->hasfile('image'))
         {
             $imagePath = "storage/posts/{$post->image}";
@@ -157,8 +161,8 @@ class PostController extends Controller
 
             $file = $request->file('image');
             $filename =  uniqid() . "." . $file->getClientOriginalExtension();;
-            $file->move("storage/posts", $filename);
-            // $file->storeAs('posts',$filename,'public');
+            // $file->move("storage/posts", $filename);
+            $file->storeAs('posts',$filename,'public');
 
             
             $post->image = $filename;
@@ -182,8 +186,9 @@ class PostController extends Controller
     {
         $imagePath = "storage/posts/{$post->image}";
 
-        if(Storage::fileExists($imagePath)) {
-            Storage::delete($imagePath);
+        if(file_exists($imagePath)) {
+
+            unlink($imagePath);
         }
 
         // Delete the post

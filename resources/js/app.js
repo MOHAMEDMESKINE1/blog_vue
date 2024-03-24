@@ -12,6 +12,9 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import FileUpload from 'primevue/fileupload';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+
 import ConfirmationService from 'primevue/confirmationservice';
 
 import ToastService from 'primevue/toastservice';
@@ -35,7 +38,8 @@ createInertiaApp({
             .component('Button',Button)
             .component('Dialog',Dialog)
             .component('InputText',InputText)
-            // .component('FloatLabel',FloatLabel)
+            .component('IconField',IconField)
+            .component('InputIcon',InputIcon)
             .component('Textarea',Textarea)
             .component('FileUpload',FileUpload)
             .mount(el);
