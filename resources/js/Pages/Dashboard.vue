@@ -1,14 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
-
-const value = ref('type something ...');
 
 
-console.log(posts);
+
 </script>
 
 <template>

@@ -106,7 +106,8 @@ class PostController extends Controller
         {
             $file = request()->file('image');
             $filename =  uniqid() . "." . $file->getClientOriginalExtension();;
-            $file->move("storage/posts", $filename);
+            // $file->move("storage/posts", $filename);
+           $file->storeAs('posts',$filename,'public');
             
             $image = $filename;
         }
@@ -114,7 +115,7 @@ class PostController extends Controller
          Post::create([
             "title"=>$request->title,
             "description"=>$request->description,
-            "image"=>$image  ,
+            "image"=>$image ?? null ,
             "user_id"=> auth()->user()->id
          ]);
          return to_route('posts.index')->with('success','Post added successfully');
@@ -146,7 +147,9 @@ class PostController extends Controller
             $imagePath = "storage/posts/{$post->image}";
 
             if($post->image){
+
                 if(file_exists($imagePath)) {
+
                     unlink($imagePath);
                 }
             }
@@ -155,6 +158,8 @@ class PostController extends Controller
             $file = $request->file('image');
             $filename =  uniqid() . "." . $file->getClientOriginalExtension();;
             $file->move("storage/posts", $filename);
+            // $file->storeAs('posts',$filename,'public');
+
             
             $post->image = $filename;
            
@@ -166,7 +171,7 @@ class PostController extends Controller
             "image"=> $filename?? $post->image
          ]);
 
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully');
+        return to_route('posts.index')->with('success', 'Post updated successfully');
 
     }
 
@@ -177,13 +182,13 @@ class PostController extends Controller
     {
         $imagePath = "storage/posts/{$post->image}";
 
-        if(file_exists($imagePath)) {
-            unlink($imagePath);
+        if(Storage::fileExists($imagePath)) {
+            Storage::delete($imagePath);
         }
 
         // Delete the post
         $post->delete();
 
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully');
+        return to_route('posts.index')->with('success', 'Post deleted successfully');
     }
 }

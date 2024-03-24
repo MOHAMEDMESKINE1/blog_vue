@@ -4,36 +4,29 @@ import { Link } from '@inertiajs/inertia-vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import Table from '@/Components/blog/components/Table.vue';
-import { onMounted, ref } from "vue";
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
-import { Inertia } from '@inertiajs/inertia';
+import ConfirmDialog from 'primevue/confirmdialog';
+import InputError from '@/Components/InputError.vue';
+import usePosts from '@/composables/posts/usePosts';
 
 defineProps ({
-    posts: Object
+    posts: Object,
+    errors:Object
 })
-const toast = useToast();
-const visibleCreatePost = ref(false);
-const form = ref({
-    title:'',
-    description:''
-});
- const addPost = () => {
-    if(form.value.title.trim()!=="" && form.value.description.trim()!==""){
-        
-        toast.add({severity:'success', summary: 'Post Added Succesfully', life: 3000});
 
-    }else{
-        toast.add({severity:'error', summary: 'Field are required', life: 3000});
-
-    }
-}
+const {
+    form,
+    visibleCreatePost,
+    visibleEditPost,
+    isEditMode,
+    savePost,
+    previewImage,
+    deletePost,
+    openEditModal,
+    updatePost
+} = usePosts();
 
 </script>
-
-
 
 <template>
    <AuthenticatedLayout>
@@ -42,37 +35,92 @@ const form = ref({
 
         <div class="flex justify-end my-2">
             <Toast/>
+
+            <ConfirmDialog></ConfirmDialog>
+
             <Button severity="contrast" outlined @click="visibleCreatePost = true" label="Create Post"/>
-            
-       <!-- Add dialog -->
-       <Dialog class="bg-white"  v-model:visible="visibleCreatePost" header="Create a Post" :style="{ width: '25rem' }">
-           <div class="mb-3">
-                <label for="title">Title</label>
-                <InputText id="title" class="w-full" v-model="form.title" />
-           </div>
 
-           <div class="mb-3">
-                <label for="username">Username</label>
-                <Textarea v-model="form.description" class="w-full" rows="5" cols="30" />
-           </div>
-           <div class="mb-3">
-                <label for="file">Image</label>
-                <FileUpload mode="basic" class="w-full" name="demo[]"  accept="image/*" :maxFileSize="1000000" />
-            </div>
+            <!-- Add dialog -->
+            <Dialog class="bg-white"  v-model:visible="visibleCreatePost" header="Create a Post" :style="{ width: '25rem' }">
 
-           
-            <div class="flex justify-content-end gap-2 mt-2">
+                <form @submit.prevent="savePost" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title">Title</label>
+                            <InputText type="text" id="title" class="w-full" v-model="form.title" />
+                        
+                            <InputError class="text-red-400 my-4" :message="errors.title"/>
 
-                <Button type="button" severity="success"  label="Save" @click="addPost"/>
-                <Button type="button" outlined severity="secondary"   label="Cancel" @click="visibleCreatePost = false"/>
-            </div>
-        </Dialog>
+                    </div>
 
+                    <div class="mb-3">
+                            <label for="description">Description</label>
+                            <Textarea type="text" v-model="form.description" class="w-full" rows="5" cols="30" />
+                            
+                            <InputError class="text-red-400 my-4" :message="errors.description"/>
+
+                    </div>
+                    <div class="mb-3">
+                            <label for="file">Image</label>
+                            <FileUpload mode="basic" class="w-full"  @input="previewImage"  accept='image/*' :maxFileSize="1000000" />
+                            <InputError class="text-red-400 my-4" :message="errors.image"/>
+
+                            <progress v-if="form.progress" :value="form.progress.percentage" max="100">
+                                    {{ form.progress.percentage }}%
+                            </progress>
+                    </div>
+
+                    
+                    <div class="flex justify-content-end gap-2 mt-2">
+
+                        <Button type="submit" severity="success"  label="Save" />
+                        <Button type="button" outlined severity="secondary"   label="Cancel" @click="visibleCreatePost = false"/>
+                    </div>
+                </form>
+            </Dialog>
+            <!-- Add dialog -->
+
+
+            <!-- Edit dialog -->
+            <Dialog class="bg-white"  v-model:visible="visibleEditPost" header="Edit  Post" :style="{ width: '25rem' }">
+
+                <form @submit.prevent="updatePost " enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title">Title</label>
+                            <InputText type="text" id="title" class="w-full" v-model="form.title" />
+                        
+                            <small class="text-red-400 my-4" v-if="errors.title">{{ errors.title }}</small>
+
+                    </div>
+
+                    <div class="mb-3">
+                            <label for="description">Description</label>
+                            <Textarea type="text" v-model="form.description" class="w-full" rows="5" cols="30" />
+                            
+                            <small class="text-red-400 my-4" v-if="errors.description">{{ errors.description }}</small>
+
+                    </div>
+                    <div class="mb-3">
+                            <label for="file">Image</label>
+                            <FileUpload mode="basic" class="w-full"  @input="previewImage"   />
+                            <!-- <img class="rounded-full w-16" :src="url" /> -->
+
+                        </div>
+
+                    
+                        <div class="flex justify-content-end gap-2 mt-2">
+
+                            <Button type="submit" severity="success"  label="Save" />
+                            <Button type="button" outlined severity="secondary"   label="Cancel" @click="visibleEditPost = false"/>
+                        </div>
+                </form>
+            </Dialog>
+             <!-- Edit dialog -->
 
         </div>
+
         <div class="relative overflow-x-auto">
         
-             <Table :headers='["ID","POST","POSTED BY","ACTION"]'>
+             <Table :headers='["ID","POST","POSTED BY","IMAGE","ACTION"]'>
                     
                 <tr v-for="post in posts.data" :key="post.id" >
                         <td class="px-6 py-4">
@@ -82,26 +130,37 @@ const form = ref({
                             {{ post.title }}
                         </td>
                         <td class="px-6 py-4">
+                            <div v-if="post.image">
+                                 <img class="rounded-sm h-16 w-16" :src="'storage/posts/'+post.image" :alt="post.title"/>
+                            </div>
+                            <div v-else>
+                                <span>-</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
                             {{ post.user.name }}
                         </td>
                         <td class="px-6 py-4">
                             
-                            <Link class="  mx-2 " :href="route('posts.show',post.id)">
-                                <i class="pi pi-eye text-xl text-green-500" ></i>
+                            <div class="flex justify-center">
+                                <Link  class="  mx-2 " :href="route('posts.show',post.id)">
+                                <i class="pi mx-2 pi-eye text-xl text-green-500" ></i>
                                
                                
                             </Link>
+                
+                            <i  @click="openEditModal(post)"  class="pi mx-2 pi-pencil text-xl text-indigo-500" ></i>
+                          
+                            <i @click="deletePost(post)"  class="pi mx-2 pi-trash text-xl text-red-500" ></i>
 
-                            <Link :href="route('posts.edit',post.id)">
+                            
 
-                                <i class="pi pi-pencil text-xl text-indigo-500" ></i>
-                               
-                            </Link>
+                            </div>    
                         </td>                   
                 </tr>
 
             </Table>
-           
+         
             <!-- <DataTable :value="posts.data"  tableStyle="min-width: 50rem">
                 <Column field="id"  sortable header="ID"></Column>
                 <Column field="title" sortable header="POST"></Column>
@@ -115,7 +174,9 @@ const form = ref({
                         </div>
                     </template>
                 </Column>
-            </DataTable> -->
+            </DataTable> 
+            -->
+
         </div>
 
         <Pagination :links="posts.links"/>
