@@ -16,16 +16,20 @@ class CommentController extends Controller
     public function index(Request $request)
     {
         
-        if($request->filled('search')){
+        // if($request->filled('search')){
 
-            $comments = Comment::search(trim($request->search))->paginate(3);
-            $comments->load('user');
-            $comments->load('post');
-            $posts = Post::all();
-          }else{
-            $comments  = Comment::with(['user','post'])->paginate(3);
-            $posts = Post::all();
-          }
+        //     $comments = Comment::search(trim($request->search))->paginate(3);
+        //     $comments->load('user');
+        //     $comments->load('post');
+        //     $posts = Post::all();
+        //   }else{
+        //     $comments  = Comment::with(['user','post'])->paginate(3);
+        //     $posts = Post::all();
+        //   }
+        $comments  = Comment::with(['user','post'])->paginate(3);
+        $posts = Post::all();
+        
+
         return Inertia::render('Comments/Index',compact('comments','posts'));
     }
 
@@ -40,14 +44,13 @@ class CommentController extends Controller
             "content"=>"required",
         ]);
 
-        if(!empty($request)){
-
-            Comment::create([
-                "post_id"=>$request->post,
-                "user_id"=>auth()->user()->id,
-                "content"=>$request->content,
-            ]);
-        }
+       
+        Comment::create([
+            "post_id"=>$request->post,
+            "user_id"=>auth()->user()->id,
+            "content"=>$request->content,
+        ]);
+    
 
       
 
@@ -63,7 +66,10 @@ class CommentController extends Controller
     public function update(Request $request,Comment $comment)
     {
 
-      if(!empty($request)){
+        $request->validate([
+            "post"=>"required",
+            "content"=>"required",
+        ]);
 
         $comment->update([
             "post_id"=>intval($request->post),
@@ -72,7 +78,7 @@ class CommentController extends Controller
         ]);
         return to_route('comments.index')->with('success','comment updated successfully');
 
-      }
+      
     }
 
     /**
@@ -81,5 +87,7 @@ class CommentController extends Controller
     public function destroy(Comment $comment)
     {
         $comment->delete();
+        return to_route('comments.index')->with('success','comment updated successfully');
+
     }
 }
